@@ -1,0 +1,257 @@
+/***********************************************************************
+  					SIMPL+ Module Information
+***********************************************************************/
+/*
+Programmer: 	Ben Doss
+Comments:
+*/
+/***********************************************************************
+  						COMPILER DIRECTIVES
+  		(UNCOMMENT AND DECLARE COMPILER DIRECTIVES AS NEEDED)
+***********************************************************************/
+#SYMBOL_NAME 				"Doug Fleenor Feedback Processor V1.0" 
+#HINT "Process feedback from Doug Fleenor RS232 to DMX512 interface."
+#CATEGORY "32" 
+					 
+//#DEFAULT_NONVOLATILE
+//#DEFAULT_VOLATILE 
+//#DEFINE_CONSTANT			
+/*#HELP_BEGIN  
+#HELP_END 
+*/
+/**********************************************************************/
+
+/*******************************************************************************************
+  Include Libraries
+  (Uncomment and include additional libraries as needed)
+*******************************************************************************************/
+// #CRESTRON_LIBRARY ""
+// #USER_LIBRARY ""
+  
+/*******************************************************************************************
+  DIGITAL, ANALOG and SERIAL INPUTS and OUTPUTS
+  (Uncomment and declare inputs and outputs as needed)
+*******************************************************************************************/
+
+STRING_INPUT Channel_1[3],Channel_2[3],Channel_3[3],Channel_4[3],Channel_5[3],Channel_6[3],Channel_7[3],Channel_8[3],
+			Channel_9[3],Channel_10[3],Channel_11[3],Channel_12[3],Channel_13[3],Channel_14[3],Channel_15[3],Channel_16[3]; 
+
+BUFFER_INPUT FromDevice$[500]; 
+
+ANALOG_OUTPUT Channel_Level[16];
+
+		 
+/**********************************************************************/
+
+
+/*******************************************************************************************
+  Parameters
+  (Uncomment and declare parameters as needed)
+*******************************************************************************************/
+// INTEGER_PARAMETER
+// SIGNED_INTEGER_PARAMETER
+// LONG_INTEGER_PARAMETER
+// SIGNED_LONG_INTEGER_PARAMETER
+// STRING_PARAMETER
+
+/*******************************************************************************************
+  Parameter Properties
+  (Uncomment and declare parameter properties as needed)
+*******************************************************************************************/
+/*
+#BEGIN_PARAMETER_PROPERTIES parameter_variable, parameter_variable, ...
+   // propValidUnits = // unitString or unitDecimal|unitHex|unitPercent|unitCharacter|unitTime|unitTicks;
+   // propDefaultUnit = // unitString, unitDecimal, unitHex, unitPercent, unitCharacter, unitTime or unitTicks;
+   // propBounds = lower_bound , upper_bound;
+   // propDefaultValue = ;  // or, propDefaultValue = "";
+   // propList = // { "value" , "label" } , { "value" , "label" } , ... ;
+   // propShortDescription = "status_bar_hint_text";
+   // #BEGIN_PROP_FULL_DESCRIPTION  line_1...  line_2...  line_n  #END_PROP_FULL_DESCRIPTION
+   // #BEGIN_PROP_NOTES line_1...  line_2...  line_n  #END_PROP_NOTES
+#END_PARAMETER_PROPERTIES
+*/
+
+/*******************************************************************************************
+  Structure Definitions
+  (Uncomment and define structure definitions as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: struct.myString = "";
+*******************************************************************************************/
+/*
+STRUCTURE MyStruct1
+{
+};
+
+MyStruct1 struct;
+*/
+
+/*******************************************************************************************
+  Global Variables
+  (Uncomment and declare global variables as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: myString = "";
+*******************************************************************************************/
+STRING Temp$[1000];
+INTEGER Channel_Number[16];
+
+/*******************************************************************************************
+  Functions
+  (Add any additional functions here)
+  Note:  Functions must be physically placed before the location in
+         the code that calls them.
+*******************************************************************************************/
+FUNCTION ProcessData()
+{
+	Integer Channel, Level, I;
+	String Trash[100];
+
+	If(Find("C",Temp$))
+	{
+     	Trash = Remove("C",Temp$);
+		Channel = ATOI(Left(Temp$,3));
+
+		if(find("@",Temp$))
+         	Trash = Remove("@",Temp$);
+		else if(find("L",Temp$))
+			Trash = Remove("L",Temp$);
+
+		Level = ATOI(Left(Temp$,3));
+     
+		for(I = 1 to 16)
+		{
+         	If(Channel = Channel_Number[I])
+				Channel_Level[I] = Level;
+		}
+   
+   	}	
+}
+
+/*******************************************************************************************
+  Event Handlers
+  (Uncomment and declare additional event handlers as needed)
+*******************************************************************************************/
+CHANGE Channel_1
+{
+ 	Channel_Number[1] = ATOI(Channel_1);
+}
+
+CHANGE Channel_2
+{
+ 	Channel_Number[2] = ATOI(Channel_2);
+}
+
+CHANGE Channel_3
+{
+ 	Channel_Number[3] = ATOI(Channel_3);
+}
+
+CHANGE Channel_4
+{
+ 	Channel_Number[4] = ATOI(Channel_4);
+}
+
+CHANGE Channel_5
+{
+ 	Channel_Number[5] = ATOI(Channel_5);
+}
+
+CHANGE Channel_6
+{
+ 	Channel_Number[6] = ATOI(Channel_6);
+}
+
+CHANGE Channel_7
+{
+ 	Channel_Number[7] = ATOI(Channel_7);
+}
+
+CHANGE Channel_8
+{
+ 	Channel_Number[8] = ATOI(Channel_8);
+}
+
+CHANGE Channel_9
+{
+ 	Channel_Number[9] = ATOI(Channel_9);
+}
+
+CHANGE Channel_10
+{
+ 	Channel_Number[10] = ATOI(Channel_10);
+}
+
+CHANGE Channel_11
+{
+ 	Channel_Number[11] = ATOI(Channel_11);
+}
+
+CHANGE Channel_12
+{
+ 	Channel_Number[12] = ATOI(Channel_12);
+}
+
+CHANGE Channel_13
+{
+ 	Channel_Number[13] = ATOI(Channel_13);
+}
+
+CHANGE Channel_14
+{
+ 	Channel_Number[14] = ATOI(Channel_14);
+}
+
+CHANGE Channel_15
+{
+ 	Channel_Number[15] = ATOI(Channel_15);
+}
+         
+CHANGE Channel_16
+{
+ 	Channel_Number[16] = ATOI(Channel_16);
+}
+       
+
+
+#if_series3
+THREADSAFE CHANGE FromDevice$
+{   
+	 
+    While(1)
+	{
+		try
+        {
+              // locate delimeter of data from BUFFER_INPUT and remove it from the BUFFER_INPUT and place in temporary processing buffer.
+              Temp$ = Gather("\x0D",FromDevice$);   // Gets Command
+    
+              // process the data just placed in temporary processing buffer
+              call ProcessData();
+         }
+         catch
+         {
+              Print("Error Processing Data from Doug Fleenor RS232 to DMX512\n");
+         }
+	}
+}
+#else
+THREADSAFE CHANGE FromDevice$
+{
+	while(1)
+	{
+		Temp$ = Gather("\x0D",FromDevice$);
+		call ProcessData();
+
+	}
+}
+#endif
+
+
+/*******************************************************************************************
+  Main()
+  Uncomment and place one-time startup code here
+  (This code will get called when the system starts up)
+*******************************************************************************************/
+
+Function Main()
+{
+
+}
